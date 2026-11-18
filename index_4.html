@@ -1,0 +1,479 @@
+<title>Start Your Company Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a treasure trail. Levels run down a dotted path; each step is a stop that pays a gold coin when done. Tools sit beside the trail. */
+:root{
+  --bg:#f2f5f1; --panel:#ffffff; --ink:#15241f; --muted:#5a6a63; --line:#d5dfd9;
+  --teal:#1d5c52; --teal-soft:#e2eeea; --gold:#b97c0c; --gold-soft:#f7e9c8; --done:#2e7a4c; --done-soft:#e1f1e7;
+  --warn:#a5461a; --warn-soft:#f8e5da; --wait:#2f5d8a; --wait-soft:#e3ecf6;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1614; --panel:#16201d; --ink:#e7eee9; --muted:#9bada5; --line:#27352f;
+  --teal:#62b5a5; --teal-soft:#1b2c28; --gold:#e6ab3c; --gold-soft:#3a2e15; --done:#5fc58d; --done-soft:#17301f;
+  --warn:#f09a6c; --warn-soft:#3a2117; --wait:#86b4e6; --wait-soft:#18263a; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0e1614; --panel:#16201d; --ink:#e7eee9; --muted:#9bada5; --line:#27352f;
+  --teal:#62b5a5; --teal-soft:#1b2c28; --gold:#e6ab3c; --gold-soft:#3a2e15; --done:#5fc58d; --done-soft:#17301f;
+  --warn:#f09a6c; --warn-soft:#3a2117; --wait:#86b4e6; --wait-soft:#18263a; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono);font-size:.88em;font-variant-numeric:tabular-nums}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:22px;border-bottom:2px dashed var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px}
+.hero h1{font-size:clamp(30px,5vw,50px);font-weight:800;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{color:var(--muted);max-width:60ch;margin:10px 0 0}
+.purse{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px}
+.coin{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe7a3,var(--gold) 70%);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;color:#5a3a00;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);flex:none}
+.purse b{font-family:var(--f-display);font-size:26px;display:block;line-height:1}
+.purse small{color:var(--muted)}
+.bar{height:10px;background:var(--teal-soft);border-radius:99px;overflow:hidden;margin-top:18px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:99px;transition:width .6s ease}
+.barlabel{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+
+/* Layout */
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;margin-top:28px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+
+/* Trail */
+.level{position:relative;padding-left:44px;margin-bottom:26px}
+.level::before{content:"";position:absolute;left:17px;top:44px;bottom:-26px;border-left:3px dotted var(--line)}
+.level:last-child::before{display:none}
+.lvl-head{display:flex;align-items:center;gap:12px;cursor:pointer;background:none;border:0;padding:0;text-align:left;width:100%;margin-left:-44px}
+.badge{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;background:var(--teal-soft);color:var(--teal);border:2px solid var(--teal);flex:none}
+.level.complete .badge{background:var(--gold);border-color:var(--gold);color:#3d2700}
+.lvl-head h2{font-size:21px;font-weight:700}
+.lvl-head .meta{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
+.chev{transition:transform .2s;color:var(--muted)}
+.level.closed .chev{transform:rotate(-90deg)}
+.steps{display:grid;gap:10px;margin-top:12px}
+.level.closed .steps{display:none}
+
+.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}
+.step.s-done{background:var(--done-soft);border-color:transparent}
+.tick{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--panel);cursor:pointer;display:grid;place-items:center;font-weight:700;color:transparent;transition:transform .15s}
+.tick:hover{transform:scale(1.08);border-color:var(--gold)}
+.s-done .tick{background:var(--gold);border-color:var(--gold);color:#3d2700}
+.step h3{font-size:15.5px;font-family:var(--f-body);font-weight:600}
+.s-done h3{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--done) 60%,transparent)}
+.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px;font-size:13px;color:var(--muted)}
+.pill{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.p-done{background:var(--done);color:var(--panel)}
+.p-prog{background:var(--gold-soft);color:var(--gold)}
+.p-wait{background:var(--wait-soft);color:var(--wait)}
+.p-todo{background:var(--teal-soft);color:var(--teal)}
+.cost{font-family:var(--f-mono);font-size:12px}
+.more{background:none;border:0;padding:0;color:var(--teal);font-weight:600;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.tip{margin-top:8px;font-size:14px;background:var(--gold-soft);border-radius:8px;padding:8px 10px}
+.tip.lesson{background:var(--warn-soft)}
+.tip strong{color:var(--gold)}
+.tip.lesson strong{color:var(--warn)}
+.statusbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.statusbtns button{font-size:12px;border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:3px 10px;cursor:pointer}
+.statusbtns button[aria-pressed="true"]{border-color:var(--teal);background:var(--teal);color:var(--panel)}
+
+.chest{margin-left:44px;background:var(--panel);border:2px dashed var(--gold);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:center}
+.chest .big{font-size:34px}
+.chest.open{background:var(--gold-soft);border-style:solid}
+
+/* Side tools */
+.tool{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px}
+.tool h2{font-size:19px;margin-bottom:4px}
+.tool p.sub{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+label{font-size:13px;font-weight:600;display:block;margin-bottom:4px}
+input[type=text]{width:100%;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);text-transform:uppercase}
+input[type=range]{width:100%;accent-color:var(--teal)}
+.verdict{margin-top:10px;font-size:14px;display:grid;gap:6px}
+.verdict div{padding:7px 10px;border-radius:8px}
+.v-bad{background:var(--warn-soft);color:var(--warn)}
+.v-ok{background:var(--done-soft);color:var(--done)}
+.v-meh{background:var(--gold-soft);color:var(--gold)}
+.banks{display:grid;gap:8px;margin-top:12px}
+.bank{display:grid;grid-template-columns:110px minmax(0,1fr) 70px;gap:8px;align-items:center;font-size:13.5px}
+.bank .track{height:12px;background:var(--teal-soft);border-radius:99px;overflow:hidden}
+.bank .track i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .3s}
+.bank.win .track i{background:var(--gold)}
+.bank.win b{color:var(--gold)}
+.bank span:last-child{text-align:right;font-family:var(--f-mono);font-size:13px}
+.sl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.quiz q{display:block;font-weight:600;margin-bottom:8px;quotes:none}
+.opts{display:grid;gap:6px}
+.opts button{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:14px}
+.opts button.right{background:var(--done-soft);border-color:var(--done)}
+.opts button.wrong{background:var(--warn-soft);border-color:var(--warn)}
+.qfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px;color:var(--muted);gap:8px}
+.btn{border:0;background:var(--teal);color:var(--panel);border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+.refs{display:grid;gap:0;font-size:13.5px}
+.refs div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.refs div:last-child{border-bottom:0}
+.refs span:first-child{color:var(--muted)}
+.dates li{margin-bottom:6px}
+.dates{padding-left:18px;margin:0;font-size:14px}
+.foot{margin-top:30px;font-size:12.5px;color:var(--muted)}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0}
+
+/* coin pop */
+.pop{position:fixed;pointer-events:none;font-family:var(--f-display);font-weight:800;color:var(--gold);font-size:18px;animation:up 1s ease-out forwards;z-index:50}
+@keyframes up{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;font-size:14px;z-index:60;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){.pop{animation:none;opacity:0}.bar i,.bank .track i,.tick,.chev{transition:none}}
+
+/* AI helper */
+.helper{border:2px solid var(--teal)}
+.helper .msgs{display:grid;gap:8px;max-height:380px;overflow-y:auto;padding:2px;margin-bottom:10px}
+.msg{padding:9px 11px;border-radius:10px;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{background:var(--teal);color:var(--panel);justify-self:end;max-width:90%}
+.msg.ai{background:var(--bg);border:1px solid var(--line);max-width:100%}
+.msg.ai.err{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.msg img{display:block;max-width:140px;border-radius:6px;margin-top:6px}
+.suggest{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.suggest button{font-size:12.5px;border:1px solid var(--line);background:var(--bg);border-radius:99px;padding:4px 10px;cursor:pointer;text-align:left}
+.compose{display:grid;gap:8px}
+.compose textarea{width:100%;font:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical;min-height:64px}
+.crow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.attach{border:1px dashed var(--teal);background:none;color:var(--teal);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs span{position:relative}
+.thumbs img{width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}
+.thumbs button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:0;background:var(--ink);color:var(--bg);font-size:12px;line-height:20px;padding:0;cursor:pointer}
+.btn.ghost{background:none;color:var(--teal);border:1px solid var(--teal)}
+.warnline{font-size:12.5px;color:var(--warn);margin:6px 0 0}
+.myrefs{display:grid;gap:8px}
+.myrefs input{text-transform:none}
+.step .why{font-size:13px;color:var(--muted);margin-top:2px}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">South Africa · CIPC BizPortal · Private company (Pty) Ltd</div>
+      <h1>Start Your <em>Company</em> Quest</h1>
+      <p>Register your own (Pty) Ltd and get it ready for government tenders, one stop at a time. Tap a coin when a step is done. Open a step for tips. Stuck on a screen? Ask the helper and upload a screenshot.</p>
+    </div>
+    <div class="purse" aria-live="polite">
+      <div class="coin" aria-hidden="true">R</div>
+      <div><b id="coins">0</b><small>of <span id="total">0</span> coins collected</small></div>
+    </div>
+  </header>
+  <div class="bar" aria-hidden="true"><i id="barfill"></i></div>
+  <div class="barlabel"><span id="levelnow">Current level</span><span id="pct">0%</span></div>
+
+  <div class="grid">
+    <main id="trail" aria-label="Registration trail"></main>
+
+    <aside>
+      <section class="tool helper" id="helper" aria-labelledby="ai-h">
+        <h2 id="ai-h">Stuck? Ask the helper</h2>
+        <p class="sub">Ask anything about registering your company. Add a screenshot of the screen you're stuck on and it will tell you what to fill in.</p>
+        <div class="msgs" id="msgs" aria-live="polite">
+          <div class="msg ai">Hi! I can explain any step, check a company name, or read a BizPortal screenshot. What are you working on?</div>
+        </div>
+        <div class="suggest" id="suggest">
+          <button>Why was my name refused?</button>
+          <button>What financial year end should I pick?</button>
+          <button>Which bank should I choose?</button>
+          <button>What happens after I pay?</button>
+        </div>
+        <form class="compose" id="compose">
+          <label for="ask" class="sr">Your question</label>
+          <textarea id="ask" placeholder="Type your question…"></textarea>
+          <div class="thumbs" id="thumbs"></div>
+          <div class="crow">
+            <button type="button" class="attach" id="attachBtn">+ Add screenshot</button>
+            <input type="file" id="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+            <span style="flex:1"></span>
+            <button type="button" class="btn ghost" id="stop" hidden>Stop</button>
+            <button type="submit" class="btn" id="send">Send</button>
+          </div>
+          <p class="warnline">Before sending a screenshot, cover your ID number, card details and passwords.</p>
+        </form>
+        <p class="sub" id="aiOff" hidden style="margin-top:10px">The helper works when you open this guide on Claude (claude.ai), signed in, and allow the page to use Claude. Every step on the trail still works without it.</p>
+      </section>
+
+      <section class="tool" aria-labelledby="nc-h">
+        <h2 id="nc-h">Name checker</h2>
+        <p class="sub">Type a proposed name the way you'd lodge it. It flags the mistakes that get names refused.</p>
+        <label for="nameIn">Proposed name</label>
+        <input id="nameIn" type="text" value="Mokoena Group Pty Ltd" autocomplete="off">
+        <div class="verdict" id="nameOut"></div>
+      </section>
+
+      <section class="tool" aria-labelledby="bk-h">
+        <h2 id="bk-h">Which bank is cheapest?</h2>
+        <p class="sub">Monthly cost from each bank's own 2026 price guide. Move the sliders to match your business.</p>
+        <label for="pay">Payments per month</label>
+        <input id="pay" type="range" min="0" max="30" value="5">
+        <div class="sl"><span>0</span><span id="payV">5 payments</span><span>30</span></div>
+        <label for="deb" style="margin-top:10px">Debit orders per month</label>
+        <input id="deb" type="range" min="0" max="10" value="2">
+        <div class="sl"><span>0</span><span id="debV">2 debit orders</span><span>10</span></div>
+        <div class="banks" id="banks"></div>
+        <p class="sub" style="margin:10px 0 0">Standard Bank MyMoBiz R15 + R6.10/payment + R4/debit order. Capitec Business R50 + R2 + R3. ABSA Evolve Lite R50 + R5.50 + R5.50. Check the bank's site for the latest prices.</p>
+      </section>
+
+      <section class="tool quiz" aria-labelledby="qz-h">
+        <h2 id="qz-h">Pop quiz</h2>
+        <p class="sub">Five questions. Ready to register on your own?</p>
+        <div id="quiz"></div>
+      </section>
+
+      <section class="tool" aria-labelledby="rf-h">
+        <h2 id="rf-h">My references</h2>
+        <p class="sub">Keep your numbers in one place. Saved in this browser only.</p>
+        <div class="myrefs" id="myrefs"></div>
+      </section>
+    </aside>
+  </div>
+
+  <p class="foot">Fees and rules checked November 2026; CIPC and banks change them, so confirm on their sites. This guide is general information, not legal or tax advice. CIPC call centre: <span class="mono">086 100 2472</span>. Your ticks and references stay in this browser. <button class="reset" id="reset">Reset ticks</button></p>
+</div>
+
+<script>
+const LEVELS=[
+ {name:"Get ready",steps:[
+  {t:"Have your SA ID and a 3D Secure card",w:"Card enabled for online payments (OTP or app approval)",c:0,tip:"BizPortal only takes card payments. Have your ID's issue date handy: identity checks may ask for it, and for your marriage date and spouse's ID number if you're married."},
+  {t:"Decide who owns and runs the company",w:"Directors and shareholders",c:0,tip:"One person can be the only director and 100% shareholder. If you'll tender to government, no director or shareholder may be a government, municipal or SOE employee: CSD checks this automatically."},
+  {t:"Create a free BizPortal account",w:"bizportal.gov.za",c:0,tip:"After logging in, check that your dashboard says NOT DISQUALIFIED. That's what allows you to be a director."}
+ ]},
+ {name:"Claim your name",steps:[
+  {t:"Choose up to 4 names, in order of preference",w:"Use the name checker on this page",c:0,lesson:"Never type 'Pty Ltd', 'Ltd', 'CC' or 'Company' in a reservation; CIPC adds it at registration. And avoid surname + generic word (like 'Mokoena Group'): if 'Mokoena Holdings' exists, it gets refused as confusingly similar."},
+  {t:"Lodge the name reservation",w:"BizPortal → Name Reservation",c:50,tip:"R50 covers 1 to 4 names, so always use all 4 slots. A refusal means paying R50 again."},
+  {t:"Get the approval email",w:"CIPC, about 1–2 working days",c:0,tip:"The approved name is reserved for 6 months. Save the reservation number; you need it to register."}
+ ]},
+ {name:"Fill in the registration",steps:[
+  {t:"Choose 'Name already approved'",w:"BizPortal → New Registration",c:0,tip:"Enter your reservation number. Don't click Name Reservation again, or you'll pay another R50."},
+  {t:"Director contact details",w:"Registration form",c:0,tip:"Your certificate, OTPs and every CIPC notice go to this email and cellphone. Check both for typos."},
+  {t:"Pick your financial year end",w:"Registration form",c:0,tip:"February is simplest: it matches the SARS tax year (March to February). You can change it later through CIPC."},
+  {t:"Apply for the free B-BBEE certificate",w:"B-BBEE calculator",c:0,tip:"Start-ups (turnover up to R10m) are EMEs and get it free. A 100% black-owned company gets Level 1. Enter shareholders, how many are black, and how many of those are female."},
+  {t:"Choose a bank (optional)",w:"Bank accounts page",c:0,tip:"The bank contacts you after registration. BizPortal's fee list can be out of date, so use the bank calculator on this page."},
+  {t:"Pay R125 by card",w:"CIPC Payment → Card → PAY NOW",c:125,tip:"Ignore a 'balance too low' message; that's the old prepaid system. Don't refresh or press back while paying. Screenshot the confirmation and save the reference number."}
+ ]},
+ {name:"Get your papers",steps:[
+  {t:"Receive the COR 14.3 registration certificate",w:"Email from CIPC",c:0,tip:"Usually a few working days. Nothing after a week? Call CIPC with your registration reference."},
+  {t:"Download the B-BBEE certificate",w:"BizPortal / CIPC email",c:0,tip:"If none arrives, a free EME sworn affidavit signed at a police station does the same job."},
+  {t:"Note your registration number",w:"On the COR 14.3",c:0,tip:"Format 2026/xxxxxx/07. You'll type it everywhere from now on, so add it to My references."}
+ ]},
+ {name:"Stay legal",steps:[
+  {t:"Confirm the company tax number",w:"SARS eFiling",c:0,tip:"SARS creates it automatically about a week after registration."},
+  {t:"File beneficial ownership",w:"CIPC eServices",c:0,tip:"Required by law for everyone who owns 5% or more."},
+  {t:"Diarise the CIPC annual return",w:"Every year, in your registration month",c:0,tip:"Due even with no income. Missing it repeatedly can get the company deregistered."}
+ ]},
+ {name:"Open the bank account",steps:[
+  {t:"Open the business account",w:"Bank app or branch (COR 14.3 + ID)",c:0,tip:"Switch banks, if you want to, before registering on CSD. After that every government department pays into the CSD-verified account, and changing it is a hassle."}
+ ]},
+ {name:"Get tender-ready",steps:[
+  {t:"Check your employment contract",w:"Outside-business / conflict-of-interest clauses",c:0,tip:"If you're employed, declare the company in writing if your contract asks for it, before your first bid."},
+  {t:"Register on CSD",w:"csd.gov.za",c:0,tip:"The Central Supplier Database. Needs your company, bank and tax details. Tick every commodity category you can deliver."},
+  {t:"Get the SARS Tax Compliance PIN",w:"SARS eFiling",c:0,tip:"Every tender document asks for it."},
+  {t:"Domain and business email",w:"e.g. Truehost / HOSTAFRICA + Zoho Mail free",c:100,tip:"About R80–R120 a year for a .co.za. info@yourcompany.co.za looks far better on bids than Gmail."},
+  {t:"Write a company profile",w:"One to two pages",c:0,tip:"Services, experience, key people, B-BBEE level, registration and CSD numbers. Search etenders.gov.za for what buyers ask for."}
+ ]},
+ {name:"Meet the tax calendar",steps:[
+  {t:"Keep every invoice and receipt",w:"From day one",c:0,tip:"A folder or a simple spreadsheet is enough to start."},
+  {t:"Provisional tax (IRP6)",w:"SARS eFiling, twice a year",c:0,tip:"With a February year end: end August and end February. Confirm the first due date with SARS if your first year is short."},
+  {t:"Company tax return (ITR14)",w:"SARS eFiling",c:0,tip:"Due within 12 months after each financial year end."}
+ ]}
+];
+const KEY="company-quest-v1",RKEY="company-quest-refs-v1";
+const DEF=LEVELS.map(l=>l.steps.map(()=>"todo"));
+let state=load();
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length===DEF.length&&v.every((l,i)=>l.length===DEF[i].length))return v}catch(e){}return JSON.parse(JSON.stringify(DEF))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+const LBL={done:["Done","p-done"],prog:["In progress","p-prog"],wait:["Waiting","p-wait"],todo:["To do","p-todo"]};
+let openLevels=null,aiOn=true;
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function render(){
+  const trail=document.getElementById("trail");
+  const firstOpen=Math.max(0,state.findIndex(l=>l.some(s=>s!=="done")));
+  if(openLevels===null) openLevels=LEVELS.map((_,i)=>i===firstOpen);
+  trail.innerHTML="";
+  LEVELS.forEach((lv,li)=>{
+    const done=state[li].filter(s=>s==="done").length,n=lv.steps.length;
+    const sec=document.createElement("section");
+    sec.className="level"+(done===n?" complete":"")+(openLevels[li]?"":" closed");
+    sec.innerHTML=`<button class="lvl-head" aria-expanded="${openLevels[li]}"><span class="badge">${done===n?"★":li+1}</span><h2>${lv.name}</h2><span class="meta">${done}/${n}</span><span class="chev" aria-hidden="true">▾</span></button><div class="steps"></div>`;
+    sec.querySelector(".lvl-head").onclick=()=>{openLevels[li]=!openLevels[li];render()};
+    const box=sec.querySelector(".steps");
+    lv.steps.forEach((st,si)=>{
+      const s=state[li][si];
+      const el=document.createElement("article");
+      el.className="step"+(s==="done"?" s-done":"");
+      const note=st.lesson?`<div class="tip lesson" hidden><strong>Avoid this:</strong> ${st.lesson}</div>`:`<div class="tip" hidden><strong>Tip:</strong> ${st.tip}</div>`;
+      el.innerHTML=`<button class="tick" aria-label="${s==="done"?"Mark as not done":"Mark as done"}: ${esc(st.t)}" aria-pressed="${s==="done"}">✓</button>
+        <div><h3>${st.t}</h3>
+        <div class="row"><span class="pill ${LBL[s][1]}">${LBL[s][0]}</span><span>${st.w}</span>${st.c?`<span class="cost">R${st.c}</span>`:""}<button class="more">${st.lesson?"Watch out":"Tip"}</button>${aiOn?'<button class="more ask">Ask about this</button>':""}</div>
+        ${note}
+        <div class="statusbtns" hidden>${["todo","prog","wait","done"].map(k=>`<button data-k="${k}" aria-pressed="${s===k}">${LBL[k][0]}</button>`).join("")}</div></div>`;
+      el.querySelector(".tick").onclick=e=>{const was=state[li][si]==="done";state[li][si]=was?"todo":"done";save();if(!was)coin(e.currentTarget,li);render()};
+      el.querySelector(".more").onclick=()=>{el.querySelectorAll(".tip,.statusbtns").forEach(x=>x.hidden=!x.hidden)};
+      const ab=el.querySelector(".ask");if(ab)ab.onclick=()=>{const a=document.getElementById("ask");a.value=`I'm on the step "${st.t}". `;document.getElementById("helper").scrollIntoView({behavior:"smooth",block:"start"});a.focus()};
+      el.querySelectorAll(".statusbtns button").forEach(b=>b.onclick=()=>{const prev=state[li][si];state[li][si]=b.dataset.k;save();if(b.dataset.k==="done"&&prev!=="done")coin(b,li);render()});
+      box.appendChild(el);
+    });
+    trail.appendChild(sec);
+  });
+  const all=state.flat(),d=all.filter(s=>s==="done").length;
+  const chest=document.createElement("div");
+  chest.className="chest"+(d===all.length?" open":"");
+  chest.innerHTML=d===all.length?`<span class="big" aria-hidden="true">🏆</span><div><b>Treasure found.</b> Your company is registered, compliant and tender-ready.</div>`:`<span class="big" aria-hidden="true">🔒</span><div><b>The treasure chest:</b> a tender-ready company. ${all.length-d} coins to go.</div>`;
+  trail.appendChild(chest);
+  document.getElementById("coins").textContent=d;
+  document.getElementById("total").textContent=all.length;
+  const pct=Math.round(d/all.length*100);
+  document.getElementById("pct").textContent=pct+"% of the trail";
+  document.getElementById("barfill").style.width=pct+"%";
+  const cur=state.findIndex(l=>l.some(s=>s!=="done"));
+  document.getElementById("levelnow").textContent=cur<0?"All levels complete":`Level ${cur+1} of ${LEVELS.length}: ${LEVELS[cur].name}`;
+}
+function coin(el,li){
+  const r=el.getBoundingClientRect(),p=document.createElement("span");
+  p.className="pop";p.textContent="+1 coin";p.style.left=r.left+"px";p.style.top=(r.top-6)+"px";
+  document.body.appendChild(p);setTimeout(()=>p.remove(),1000);
+  if(state[li].every(s=>s==="done"))toast(`Level complete: ${LEVELS[li].name}`);
+}
+function toast(msg){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+document.getElementById("reset").onclick=()=>{state=JSON.parse(JSON.stringify(DEF));save();openLevels=null;render();toast("Ticks reset")};
+
+/* Name checker */
+const ENT=["PTY LTD","PTY","LTD","LIMITED","INC","INCORPORATED","CC","NPC","CO-OP","COMPANY","RF","CO"];
+const GEN=["GROUP","HOLDINGS","SHOP","ENTERPRISE","ENTERPRISES","TRADING","PROJECTS","SOLUTIONS","SERVICES","INVESTMENTS","CONSULTING","AND","THE","SA","AFRICA","TECHNOLOGIES","DIGITAL","GLOBAL","SYSTEMS"];
+const RESTR=["BANK","INSURANCE","NATIONAL","GOVERNMENT","REPUBLIC","FEDERAL"];
+function checkName(){
+  const raw=document.getElementById("nameIn").value.toUpperCase().replace(/[()]/g," ").replace(/\s+/g," ").trim();
+  const out=[];
+  if(!raw){document.getElementById("nameOut").innerHTML=`<div class="v-meh">Type a name to check it.</div>`;return}
+  const words=raw.split(" ");
+  const ent=ENT.filter(e=>(" "+raw+" ").includes(" "+e+" "));
+  if(ent.length)out.push(["v-bad",`Remove "${ent[0]}". Entity types aren't allowed at reservation; CIPC adds "(Pty) Ltd" when you register.`]);
+  const rest=RESTR.filter(r=>words.includes(r));
+  if(rest.length)out.push(["v-bad",`"${rest[0]}" is a restricted word and needs special permission.`]);
+  const core=words.filter(w=>!ENT.includes(w)&&!GEN.includes(w));
+  if(!core.length)out.push(["v-bad","Only generic words left. CIPC needs a distinctive word."]);
+  else if(core.length===1&&words.some(w=>GEN.includes(w)))out.push(["v-meh",`Only one distinctive word ("${core[0]}"). If it's a surname or common word, others may already use "${core[0]} Holdings" or "${core[0]} Trading", and you'd be refused. Add a second distinctive word to be safer.`]);
+  if(!/^[A-Z0-9 &'\-]+$/.test(raw))out.push(["v-meh","Stick to letters, numbers and spaces."]);
+  if(!out.some(o=>o[0]==="v-bad"))out.push(["v-ok",`Looks lodgeable: "${core.join(" ")}" is your distinctive element. CIPC makes the final call, so lodge 4 names.`]);
+  document.getElementById("nameOut").innerHTML=out.map(o=>`<div class="${o[0]}">${esc(o[1])}</div>`).join("");
+}
+document.getElementById("nameIn").addEventListener("input",checkName);
+
+/* Bank calculator */
+const BANKS=[["Standard Bank",15,6.10,4],["Capitec",50,2,3],["ABSA Lite",50,5.5,5.5]];
+function banks(){
+  const p=+document.getElementById("pay").value,d=+document.getElementById("deb").value;
+  document.getElementById("payV").textContent=p+(p===1?" payment":" payments");
+  document.getElementById("debV").textContent=d+(d===1?" debit order":" debit orders");
+  const costs=BANKS.map(b=>[b[0],b[1]+b[2]*p+b[3]*d]);
+  const max=Math.max(...costs.map(c=>c[1])),min=Math.min(...costs.map(c=>c[1]));
+  document.getElementById("banks").innerHTML=costs.map(c=>`<div class="bank${c[1]===min?" win":""}"><b>${c[0]}</b><span class="track"><i style="width:${(c[1]/max*100).toFixed(0)}%"></i></span><span>R${c[1].toFixed(0)}</span></div>`).join("");
+}
+["pay","deb"].forEach(id=>document.getElementById(id).addEventListener("input",banks));
+
+/* Quiz */
+const Q=[
+ {q:"How should you type the name in a name reservation?",o:["SIZWE TECH PTY LTD","SIZWE TECH","Sizwe Tech (Pty) Ltd"],a:1,e:"No entity type at reservation. CIPC adds (Pty) Ltd when you register."},
+ {q:"How many names can one R50 reservation hold?",o:["1","2","Up to 4"],a:2,e:"Always use all 4 slots, in order of preference."},
+ {q:"Which financial year end lines up with SARS?",o:["December","February","June"],a:1,e:"The SARS tax year runs March to February."},
+ {q:"A 100% black-owned start-up gets which B-BBEE level?",o:["Level 1","Level 2","Level 4"],a:0,e:"A black-owned EME is Level 1, and the certificate is free."},
+ {q:"When is the CIPC annual return due?",o:["Every February","In the registration month, every year","Only when you have turnover"],a:1,e:"It's due every year in the month you registered, even with no income."}
+];
+let qi=0,score=0,answered=false;
+function quiz(){
+  const box=document.getElementById("quiz");
+  if(qi>=Q.length){box.innerHTML=`<p><b>${score} / ${Q.length}</b> ${score===Q.length?"Perfect. You're ready.":"Open the tips on the trail and try again."}</p><button class="btn" id="qr">Try again</button>`;document.getElementById("qr").onclick=()=>{qi=0;score=0;quiz()};return}
+  const c=Q[qi];answered=false;
+  box.innerHTML=`<q>${c.q}</q><div class="opts">${c.o.map((o,i)=>`<button data-i="${i}">${o}</button>`).join("")}</div><div class="qfoot"><span id="qe">Question ${qi+1} of ${Q.length}</span><button class="btn" id="qn" hidden>Next</button></div>`;
+  box.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
+    if(answered)return;answered=true;const i=+b.dataset.i;
+    box.querySelectorAll(".opts button")[c.a].classList.add("right");
+    if(i===c.a)score++;else b.classList.add("wrong");
+    document.getElementById("qe").textContent=c.e;document.getElementById("qn").hidden=false;
+  });
+  document.getElementById("qn").onclick=()=>{qi++;quiz()};
+}
+
+/* My references */
+const REFS=[["name","Approved company name"],["resv","Name reservation number"],["regref","Registration reference"],["regno","Company registration number"],["tax","Company tax number"],["csd","CSD supplier number"],["tcs","Tax Compliance PIN"]];
+function refs(){
+  let saved={};try{saved=JSON.parse(localStorage.getItem(RKEY))||{}}catch(e){}
+  const box=document.getElementById("myrefs");
+  box.innerHTML=REFS.map(([k,l])=>`<div><label for="ref-${k}">${l}</label><input type="text" id="ref-${k}" value="${esc(saved[k]||"")}" autocomplete="off"></div>`).join("");
+  REFS.forEach(([k])=>document.getElementById("ref-"+k).addEventListener("input",e=>{saved[k]=e.target.value;try{localStorage.setItem(RKEY,JSON.stringify(saved))}catch(err){}}));
+}
+
+/* AI helper */
+const GUIDE=LEVELS.map((l,i)=>`Level ${i+1} ${l.name}:\n`+l.steps.map(s=>`- ${s.t} (${s.w}${s.c?", R"+s.c:""}): ${s.tip||s.lesson}`).join("\n")).join("\n\n");
+const RULES=`You are the helper inside "Start Your Company Quest", a step-by-step guide for registering a South African private company ((Pty) Ltd) on CIPC's BizPortal and getting it tender-ready (SARS, CSD, B-BBEE). The person using it is a first-time founder, often not technical.
+
+How to answer:
+- Plain, friendly South African English. Short answers: lead with exactly what to do or click, then why. Use short numbered steps for procedures.
+- If they share a screenshot, say which screen it is, then tell them field by field what to enter or which button to press.
+- If a screenshot shows an ID number, bank card, password or OTP, tell them gently not to share those and to cover them next time. Never repeat such numbers back.
+- Fees and rules (November 2026): name reservation R50 for up to 4 names; registration R125 by 3D Secure card; EME B-BBEE certificate free; CIPC annual return due yearly in the registration month. Rules and fees change, so say "check on the CIPC/SARS/bank site" when exactness matters.
+- You are not a lawyer, accountant or financial adviser. For personal tax, legal disputes or large money decisions, give the facts and suggest a registered tax practitioner or attorney.
+- Stay on topic: company registration, compliance, banking, tenders and running a small business in South Africa.
+
+The guide's steps and tips (use them, and stay consistent with them):
+${GUIDE}`;
+let sample=null,turns=[],files=[],ctl=null,busy=false,imgOK=false;
+const msgs=document.getElementById("msgs"),ask=document.getElementById("ask");
+function addMsg(cls,text,imgs){const d=document.createElement("div");d.className="msg "+cls;d.textContent=text;(imgs||[]).forEach(f=>{const im=document.createElement("img");im.alt="Your screenshot";im.src=URL.createObjectURL(f);d.appendChild(im)});msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d}
+function drawThumbs(){const t=document.getElementById("thumbs");t.innerHTML="";files.forEach((f,i)=>{const s=document.createElement("span");s.innerHTML=`<img alt="Screenshot ${i+1}"><button type="button" aria-label="Remove screenshot ${i+1}">×</button>`;s.querySelector("img").src=URL.createObjectURL(f);s.querySelector("button").onclick=()=>{files.splice(i,1);drawThumbs()};t.appendChild(s)})}
+document.getElementById("attachBtn").onclick=()=>document.getElementById("file").click();
+document.getElementById("file").onchange=e=>{files=files.concat([...e.target.files]).slice(0,imgOK&&imgOK.maxCount?imgOK.maxCount:4);e.target.value="";drawThumbs()};
+ask.addEventListener("paste",e=>{if(!imgOK)return;const im=[...(e.clipboardData?.files||[])].filter(f=>f.type.startsWith("image/"));if(im.length){files=files.concat(im);drawThumbs()}});
+document.getElementById("suggest").querySelectorAll("button").forEach(b=>b.onclick=()=>{ask.value=b.textContent;document.getElementById("compose").requestSubmit()});
+document.getElementById("stop").onclick=()=>ctl?.abort();
+const ERR={rate_limited:"You've hit a usage limit. Wait a bit and try again.",session_expired:"Please sign in to Claude again, then retry.",image_rejected:"That image couldn't be read. Try a PNG or JPG screenshot.",refused:"I can't help with that one. Try asking it differently.",upstream_error:"Something went wrong on the connection. Press Send to try again."};
+document.getElementById("compose").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(busy||!sample)return;
+  const q=ask.value.trim();
+  if(!q&&!files.length)return;
+  const sent=files.slice();
+  const prog=state.flat().filter(s=>s==="done").length;
+  const content=(q||"Please look at my screenshot. What do I do on this screen?")+(sent.length?`\n\n[I've attached ${sent.length} screenshot${sent.length>1?"s":""}.]`:"")+`\n\n(Progress: ${prog} of ${state.flat().length} steps ticked.)`;
+  addMsg("me",q||"(screenshot)",sent);
+  ask.value="";files=[];drawThumbs();
+  turns.push({role:"user",content});
+  const bubble=addMsg("ai","Thinking…");
+  busy=true;document.getElementById("send").disabled=true;document.getElementById("stop").hidden=false;
+  ctl=new AbortController();
+  try{
+    const opts={cache:false,signal:ctl.signal,onText:({text})=>{bubble.textContent=text;msgs.scrollTop=msgs.scrollHeight}};
+    if(sent.length)opts.images=sent;
+    const {text,truncated}=await sample([{role:"user",content:RULES},...turns.slice(-12)],opts);
+    turns.push({role:"assistant",content:text});
+    if(truncated)bubble.textContent=text+"\n\n(Cut short. Ask for the rest.)";
+  }catch(err){
+    turns.pop();
+    if(err.code==="cancelled"){bubble.textContent=err.text||"Stopped.";}
+    else if(["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(err.code)){bubble.remove();helperOff();}
+    else if(err.code==="images_unavailable"){bubble.textContent="Screenshots can't be sent from here. Describe the screen in words instead.";document.getElementById("attachBtn").hidden=true;}
+    else{bubble.className="msg ai err";bubble.textContent=(err.text?err.text+"\n\n":"")+(ERR[err.code]||ERR.upstream_error);}
+  }finally{busy=false;document.getElementById("send").disabled=false;document.getElementById("stop").hidden=true}
+});
+function helperOff(){document.getElementById("compose").hidden=true;document.getElementById("suggest").hidden=true;document.getElementById("aiOff").hidden=false;aiOn=false;render()}
+(async()=>{
+  try{sample=window.claude?await window.claude.use("sample"):null}catch(e){sample=null}
+  if(!sample){helperOff();return}
+  try{const lim=await sample.limits();imgOK=lim.images||false}catch(e){imgOK=false}
+  if(!imgOK)document.getElementById("attachBtn").hidden=true;
+  else document.getElementById("file").accept=imgOK.mediaTypes.join(",");
+})();
+
+render();checkName();banks();quiz();refs();
+</script>

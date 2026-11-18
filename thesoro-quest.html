@@ -1,0 +1,365 @@
+<title>Thesoro Company Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a treasure trail. Levels run down a dotted path; each step is a stop that pays a gold coin when done. Tools sit beside the trail. */
+:root{
+  --bg:#f2f5f1; --panel:#ffffff; --ink:#15241f; --muted:#5a6a63; --line:#d5dfd9;
+  --teal:#1d5c52; --teal-soft:#e2eeea; --gold:#b97c0c; --gold-soft:#f7e9c8; --done:#2e7a4c; --done-soft:#e1f1e7;
+  --warn:#a5461a; --warn-soft:#f8e5da; --wait:#2f5d8a; --wait-soft:#e3ecf6;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1614; --panel:#16201d; --ink:#e7eee9; --muted:#9bada5; --line:#27352f;
+  --teal:#62b5a5; --teal-soft:#1b2c28; --gold:#e6ab3c; --gold-soft:#3a2e15; --done:#5fc58d; --done-soft:#17301f;
+  --warn:#f09a6c; --warn-soft:#3a2117; --wait:#86b4e6; --wait-soft:#18263a; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0e1614; --panel:#16201d; --ink:#e7eee9; --muted:#9bada5; --line:#27352f;
+  --teal:#62b5a5; --teal-soft:#1b2c28; --gold:#e6ab3c; --gold-soft:#3a2e15; --done:#5fc58d; --done-soft:#17301f;
+  --warn:#f09a6c; --warn-soft:#3a2117; --wait:#86b4e6; --wait-soft:#18263a; color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono);font-size:.88em;font-variant-numeric:tabular-nums}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;padding-bottom:22px;border-bottom:2px dashed var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);font-weight:600;margin-bottom:8px}
+.hero h1{font-size:clamp(30px,5vw,50px);font-weight:800;letter-spacing:-.02em}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p{color:var(--muted);max-width:60ch;margin:10px 0 0}
+.purse{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 18px}
+.coin{width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe7a3,var(--gold) 70%);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;color:#5a3a00;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);flex:none}
+.purse b{font-family:var(--f-display);font-size:26px;display:block;line-height:1}
+.purse small{color:var(--muted)}
+.bar{height:10px;background:var(--teal-soft);border-radius:99px;overflow:hidden;margin-top:18px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:99px;transition:width .6s ease}
+.barlabel{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+
+/* Layout */
+.grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:28px;margin-top:28px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+
+/* Trail */
+.level{position:relative;padding-left:44px;margin-bottom:26px}
+.level::before{content:"";position:absolute;left:17px;top:44px;bottom:-26px;border-left:3px dotted var(--line)}
+.level:last-child::before{display:none}
+.lvl-head{display:flex;align-items:center;gap:12px;cursor:pointer;background:none;border:0;padding:0;text-align:left;width:100%;margin-left:-44px}
+.badge{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;background:var(--teal-soft);color:var(--teal);border:2px solid var(--teal);flex:none}
+.level.complete .badge{background:var(--gold);border-color:var(--gold);color:#3d2700}
+.lvl-head h2{font-size:21px;font-weight:700}
+.lvl-head .meta{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
+.chev{transition:transform .2s;color:var(--muted)}
+.level.closed .chev{transform:rotate(-90deg)}
+.steps{display:grid;gap:10px;margin-top:12px}
+.level.closed .steps{display:none}
+
+.step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}
+.step.s-done{background:var(--done-soft);border-color:transparent}
+.tick{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);background:var(--panel);cursor:pointer;display:grid;place-items:center;font-weight:700;color:transparent;transition:transform .15s}
+.tick:hover{transform:scale(1.08);border-color:var(--gold)}
+.s-done .tick{background:var(--gold);border-color:var(--gold);color:#3d2700}
+.step h3{font-size:15.5px;font-family:var(--f-body);font-weight:600}
+.s-done h3{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--done) 60%,transparent)}
+.row{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px;font-size:13px;color:var(--muted)}
+.pill{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:99px}
+.p-done{background:var(--done);color:var(--panel)}
+.p-prog{background:var(--gold-soft);color:var(--gold)}
+.p-wait{background:var(--wait-soft);color:var(--wait)}
+.p-todo{background:var(--teal-soft);color:var(--teal)}
+.cost{font-family:var(--f-mono);font-size:12px}
+.more{background:none;border:0;padding:0;color:var(--teal);font-weight:600;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.tip{margin-top:8px;font-size:14px;background:var(--gold-soft);border-radius:8px;padding:8px 10px}
+.tip.lesson{background:var(--warn-soft)}
+.tip strong{color:var(--gold)}
+.tip.lesson strong{color:var(--warn)}
+.statusbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.statusbtns button{font-size:12px;border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:3px 10px;cursor:pointer}
+.statusbtns button[aria-pressed="true"]{border-color:var(--teal);background:var(--teal);color:var(--panel)}
+
+.chest{margin-left:44px;background:var(--panel);border:2px dashed var(--gold);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:center}
+.chest .big{font-size:34px}
+.chest.open{background:var(--gold-soft);border-style:solid}
+
+/* Side tools */
+.tool{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px}
+.tool h2{font-size:19px;margin-bottom:4px}
+.tool p.sub{color:var(--muted);font-size:13.5px;margin:0 0 12px}
+label{font-size:13px;font-weight:600;display:block;margin-bottom:4px}
+input[type=text]{width:100%;font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);text-transform:uppercase}
+input[type=range]{width:100%;accent-color:var(--teal)}
+.verdict{margin-top:10px;font-size:14px;display:grid;gap:6px}
+.verdict div{padding:7px 10px;border-radius:8px}
+.v-bad{background:var(--warn-soft);color:var(--warn)}
+.v-ok{background:var(--done-soft);color:var(--done)}
+.v-meh{background:var(--gold-soft);color:var(--gold)}
+.banks{display:grid;gap:8px;margin-top:12px}
+.bank{display:grid;grid-template-columns:110px minmax(0,1fr) 70px;gap:8px;align-items:center;font-size:13.5px}
+.bank .track{height:12px;background:var(--teal-soft);border-radius:99px;overflow:hidden}
+.bank .track i{display:block;height:100%;background:var(--teal);border-radius:99px;transition:width .3s}
+.bank.win .track i{background:var(--gold)}
+.bank.win b{color:var(--gold)}
+.bank span:last-child{text-align:right;font-family:var(--f-mono);font-size:13px}
+.sl{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.quiz q{display:block;font-weight:600;margin-bottom:8px;quotes:none}
+.opts{display:grid;gap:6px}
+.opts button{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:14px}
+.opts button.right{background:var(--done-soft);border-color:var(--done)}
+.opts button.wrong{background:var(--warn-soft);border-color:var(--warn)}
+.qfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:13px;color:var(--muted);gap:8px}
+.btn{border:0;background:var(--teal);color:var(--panel);border-radius:8px;padding:7px 14px;font-weight:600;cursor:pointer}
+.refs{display:grid;gap:0;font-size:13.5px}
+.refs div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}
+.refs div:last-child{border-bottom:0}
+.refs span:first-child{color:var(--muted)}
+.dates li{margin-bottom:6px}
+.dates{padding-left:18px;margin:0;font-size:14px}
+.foot{margin-top:30px;font-size:12.5px;color:var(--muted)}
+.reset{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0}
+
+/* coin pop */
+.pop{position:fixed;pointer-events:none;font-family:var(--f-display);font-weight:800;color:var(--gold);font-size:18px;animation:up 1s ease-out forwards;z-index:50}
+@keyframes up{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;font-size:14px;z-index:60;max-width:calc(100% - 32px);text-align:center}
+@media (prefers-reduced-motion:reduce){.pop{animation:none;opacity:0}.bar i,.bank .track i,.tick,.chev{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Munonde Thesoro Group (Pty) Ltd · BizPortal manual</div>
+      <h1>The <em>Thesoro</em> Company Quest</h1>
+      <p>Every step of registering your company and getting tender-ready, as a trail. Tap a coin when a step is done. Open a step to see the tip or the lesson learned the hard way.</p>
+    </div>
+    <div class="purse" aria-live="polite">
+      <div class="coin" aria-hidden="true">R</div>
+      <div><b id="coins">0</b><small>of <span id="total">0</span> coins collected</small></div>
+    </div>
+  </header>
+  <div class="bar" aria-hidden="true"><i id="barfill"></i></div>
+  <div class="barlabel"><span id="levelnow">Current level</span><span id="pct">0%</span></div>
+
+  <div class="grid">
+    <main id="trail" aria-label="Registration trail"></main>
+
+    <aside>
+      <section class="tool" aria-labelledby="nc-h">
+        <h2 id="nc-h">Name checker</h2>
+        <p class="sub">Type a proposed company name the way you'd lodge it. It flags the mistakes CIPC refused on the first try.</p>
+        <label for="nameIn">Proposed name</label>
+        <input id="nameIn" type="text" value="Munonde Group Pty Ltd" autocomplete="off">
+        <div class="verdict" id="nameOut"></div>
+      </section>
+
+      <section class="tool" aria-labelledby="bk-h">
+        <h2 id="bk-h">Which bank is cheapest?</h2>
+        <p class="sub">Monthly cost from each bank's own 2026 price guide. Move the sliders to match your business.</p>
+        <label for="pay">Payments per month</label>
+        <input id="pay" type="range" min="0" max="30" value="5">
+        <div class="sl"><span>0</span><span id="payV">5 payments</span><span>30</span></div>
+        <label for="deb" style="margin-top:10px">Debit orders per month</label>
+        <input id="deb" type="range" min="0" max="10" value="2">
+        <div class="sl"><span>0</span><span id="debV">2 debit orders</span><span>10</span></div>
+        <div class="banks" id="banks"></div>
+        <p class="sub" style="margin:10px 0 0">Standard Bank MyMoBiz R15 + R6.10/payment + R4/debit order. Capitec Business R50 + R2 + R3. ABSA Evolve Lite R50 + R5.50 + R5.50. Card swipes are free at Standard Bank and Capitec.</p>
+      </section>
+
+      <section class="tool quiz" aria-labelledby="qz-h">
+        <h2 id="qz-h">Pop quiz</h2>
+        <p class="sub">Five questions. Could you register a second company without this manual?</p>
+        <div id="quiz"></div>
+      </section>
+
+      <section class="tool" aria-labelledby="rf-h">
+        <h2 id="rf-h">Key references</h2>
+        <div class="refs">
+          <div><span>Approved name reservation</span><span class="mono">9469490481</span></div>
+          <div><span>Name valid until</span><span class="mono">24 Apr 2027</span></div>
+          <div><span>Registration reference</span><span class="mono">9471562580</span></div>
+          <div><span>B-BBEE shareholder ref</span><span class="mono">626512</span></div>
+          <div><span>Refused reservation</span><span class="mono">9468641705</span></div>
+          <div><span>CIPC call centre</span><span class="mono">086 100 2472</span></div>
+        </div>
+      </section>
+
+      <section class="tool" aria-labelledby="dt-h">
+        <h2 id="dt-h">Dates to remember</h2>
+        <ul class="dates">
+          <li><b>28 Feb 2027</b>: first financial year ends (short first year)</li>
+          <li><b>End Aug and end Feb</b>: provisional tax, every year</li>
+          <li><b>Every November</b>: CIPC annual return (registration month)</li>
+          <li><b>By 29 Feb 2028</b>: first company tax return (ITR14)</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+
+  <p class="foot">Fees and rules checked November 2026. Your ticks are saved in this browser only. <button class="reset" id="reset">Reset ticks to the real status</button></p>
+</div>
+
+<script>
+const LEVELS=[
+ {name:"Claim your name",steps:[
+  {t:"Create a BizPortal account",w:"bizportal.gov.za",c:0,s:"done",tip:"Check that the dashboard says NOT DISQUALIFIED. That's what lets you be a director."},
+  {t:"1st name reservation: MUNONDE GROUP PTY LTD",w:"BizPortal → Name Reservation",c:50,s:"done",lesson:"Refused. 'Pty Ltd' isn't allowed in a reservation (CIPC adds it later), and 'Munonde Group' was too close to Munonde Holdings and Munonde Shop."},
+  {t:"2nd reservation: 4 names, no 'Pty Ltd'",w:"BizPortal → Name Reservation",c:50,s:"done",tip:"Approved: MUNONDE THESORO GROUP. A made-up word ('Thesoro', from your siblings' names) was the distinguishing element CIPC wanted. Always use all 4 slots."}
+ ]},
+ {name:"Fill in the registration",steps:[
+  {t:"Choose 'Name already approved'",w:"BizPortal → New Registration",c:0,s:"done",tip:"Enter the reservation number. Don't go back to Name Reservation, or you'll pay R50 again."},
+  {t:"Director contact details",w:"Registration form",c:0,s:"done",tip:"Your certificate, OTPs and every CIPC notice go to this email and cellphone. One typo and you'll never see them."},
+  {t:"Financial year end: February",w:"Registration form",c:0,s:"done",tip:"Matches the SARS tax year (March to February). Registering in November gives a short first year ending 28 Feb 2027."},
+  {t:"Free B-BBEE certificate (1 / 1 / 1)",w:"B-BBEE calculator",c:0,s:"done",tip:"1 shareholder, 1 black, 1 female → Level 1, 100% black female-owned. Free for start-ups (EMEs)."},
+  {t:"Bank referral: Standard Bank MyMoBiz",w:"Bank accounts page",c:0,s:"done",tip:"BizPortal's bank fees were out of date. Standard Bank's own guide says R15/month. Use the calculator to compare."},
+  {t:"Pay R125 by card",w:"CIPC Payment → Card → PAY NOW",c:125,s:"prog",tip:"Ignore the 'balance too low' message; that's the old prepaid system. Don't refresh or press back while paying, and screenshot the confirmation."}
+ ]},
+ {name:"Get your papers",steps:[
+  {t:"Receive the COR 14.3 certificate",w:"Email from CIPC",c:0,s:"wait",tip:"Usually a few working days. Nothing after a week? Call CIPC with reference 9471562580."},
+  {t:"Download the B-BBEE certificate",w:"BizPortal / CIPC email",c:0,s:"wait",tip:"If none arrives, a free EME sworn affidavit signed at a police station does the same job."},
+  {t:"Note your registration number",w:"On the COR 14.3",c:0,s:"todo",tip:"Format 2026/xxxxxx/07. You'll type it everywhere from now on."}
+ ]},
+ {name:"Stay legal",steps:[
+  {t:"Confirm the company tax number",w:"SARS eFiling",c:0,s:"todo",tip:"SARS creates it automatically about a week after registration."},
+  {t:"File beneficial ownership (you, 100%)",w:"CIPC eServices",c:0,s:"todo",tip:"Required by law for anyone owning 5% or more."},
+  {t:"Diarise the annual return",w:"Calendar, every November",c:0,s:"todo",tip:"Miss it repeatedly and CIPC can deregister the company."}
+ ]},
+ {name:"Open the bank account",steps:[
+  {t:"Open Standard Bank MyMoBiz",w:"Bank contacts you, or app / branch",c:0,s:"todo",tip:"Take the COR 14.3 and your ID. Switch banks, if you want to, before CSD; after that it's a hassle."}
+ ]},
+ {name:"Get tender-ready",steps:[
+  {t:"Check your Decision Inc contract",w:"Outside-business clauses",c:0,s:"todo",tip:"Declare the company in writing if the contract asks for it, before your first bid."},
+  {t:"Register on CSD",w:"csd.gov.za",c:0,s:"todo",tip:"Government pays only into the CSD-verified bank account, so get the bank right first."},
+  {t:"Get the SARS Tax Compliance PIN",w:"SARS eFiling",c:0,s:"todo",tip:"Every tender document asks for it."},
+  {t:"Domain and email",w:"Truehost / HOSTAFRICA + Zoho Mail free",c:100,s:"todo",tip:"About R80–R120 a year for a .co.za. info@ looks far better on bids than Gmail."},
+  {t:"Company profile",w:"From your CV",c:0,s:"todo",tip:"Lead with data migration, governance, Power BI and Azure work, since that's what tenders ask for."}
+ ]},
+ {name:"Meet the tax calendar",steps:[
+  {t:"First financial year ends",w:"28 Feb 2027",c:0,s:"todo",tip:"Keep every invoice and receipt from day one, even small ones."},
+  {t:"Provisional tax (IRP6)",w:"SARS eFiling, end Aug and end Feb",c:0,s:"todo",tip:"Confirm the first due date for the short first year with SARS."},
+  {t:"First company tax return (ITR14)",w:"SARS eFiling, by 29 Feb 2028",c:0,s:"todo",tip:"Due within 12 months after year end."}
+ ]}
+];
+const KEY="thesoro-quest-v1";
+const DEF=LEVELS.map(l=>l.steps.map(s=>s.s));
+let state=load();
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&v.length===DEF.length)return v}catch(e){}return JSON.parse(JSON.stringify(DEF))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+const LBL={done:["Done","p-done"],prog:["In progress","p-prog"],wait:["Waiting","p-wait"],todo:["To do","p-todo"]};
+let openLevels=null;
+
+function render(){
+  const trail=document.getElementById("trail");
+  const firstOpen=state.findIndex(l=>l.some(s=>s!=="done"));
+  if(openLevels===null) openLevels=LEVELS.map((_,i)=>i===firstOpen||i===firstOpen+1);
+  trail.innerHTML="";
+  LEVELS.forEach((lv,li)=>{
+    const done=state[li].filter(s=>s==="done").length, n=lv.steps.length;
+    const sec=document.createElement("section");
+    sec.className="level"+(done===n?" complete":"")+(openLevels[li]?"":" closed");
+    sec.innerHTML=`<button class="lvl-head" aria-expanded="${openLevels[li]}"><span class="badge">${done===n?"★":li+1}</span><h2>${lv.name}</h2><span class="meta">${done}/${n}</span><span class="chev" aria-hidden="true">▾</span></button><div class="steps"></div>`;
+    sec.querySelector(".lvl-head").onclick=()=>{openLevels[li]=!openLevels[li];render()};
+    const box=sec.querySelector(".steps");
+    lv.steps.forEach((st,si)=>{
+      const s=state[li][si];
+      const el=document.createElement("article");
+      el.className="step"+(s==="done"?" s-done":"");
+      const note=st.lesson?`<div class="tip lesson" hidden><strong>Lesson learned:</strong> ${st.lesson}</div>`:`<div class="tip" hidden><strong>Tip:</strong> ${st.tip}</div>`;
+      el.innerHTML=`<button class="tick" aria-label="${s==="done"?"Mark as not done":"Mark as done"}: ${st.t}" aria-pressed="${s==="done"}">✓</button>
+        <div><h3>${st.t}</h3>
+        <div class="row"><span class="pill ${LBL[s][1]}">${LBL[s][0]}</span><span>${st.w}</span>${st.c?`<span class="cost">R${st.c}</span>`:""}<button class="more">${st.lesson?"Lesson":"Tip"}</button></div>
+        ${note}
+        <div class="statusbtns" hidden>${["todo","prog","wait","done"].map(k=>`<button data-k="${k}" aria-pressed="${s===k}">${LBL[k][0]}</button>`).join("")}</div></div>`;
+      el.querySelector(".tick").onclick=e=>{const was=state[li][si]==="done";state[li][si]=was?"todo":"done";save();if(!was)coin(e.currentTarget,li);render()};
+      el.querySelector(".more").onclick=()=>{el.querySelectorAll(".tip,.statusbtns").forEach(x=>x.hidden=!x.hidden)};
+      el.querySelectorAll(".statusbtns button").forEach(b=>b.onclick=e=>{const prev=state[li][si];state[li][si]=b.dataset.k;save();if(b.dataset.k==="done"&&prev!=="done")coin(b,li);render()});
+      box.appendChild(el);
+    });
+    trail.appendChild(sec);
+  });
+  const all=state.flat(), d=all.filter(s=>s==="done").length;
+  const chest=document.createElement("div");
+  chest.className="chest"+(d===all.length?" open":"");
+  chest.innerHTML=d===all.length?`<span class="big" aria-hidden="true">🏆</span><div><b>Treasure found.</b> Munonde Thesoro Group is registered, compliant and tender-ready.</div>`:`<span class="big" aria-hidden="true">🔒</span><div><b>The treasure chest:</b> a tender-ready company. ${all.length-d} coins to go.</div>`;
+  trail.appendChild(chest);
+  document.getElementById("coins").textContent=d;
+  document.getElementById("total").textContent=all.length;
+  const pct=Math.round(d/all.length*100);
+  document.getElementById("pct").textContent=pct+"% of the trail";
+  document.getElementById("barfill").style.width=pct+"%";
+  const cur=state.findIndex(l=>l.some(s=>s!=="done"));
+  document.getElementById("levelnow").textContent=cur<0?"All levels complete":`Level ${cur+1} of ${LEVELS.length}: ${LEVELS[cur].name}`;
+}
+function coin(el,li){
+  const r=el.getBoundingClientRect(),p=document.createElement("span");
+  p.className="pop";p.textContent="+1 coin";p.style.left=(r.left)+"px";p.style.top=(r.top-6)+"px";
+  document.body.appendChild(p);setTimeout(()=>p.remove(),1000);
+  if(state[li].every(s=>s==="done"))toast(`Level complete: ${LEVELS[li].name}`);
+}
+function toast(msg){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+document.getElementById("reset").onclick=()=>{state=JSON.parse(JSON.stringify(DEF));save();openLevels=null;render();toast("Ticks reset to the real status")};
+
+/* Name checker */
+const ENT=["PTY LTD","PTY","LTD","LIMITED","INC","INCORPORATED","CC","NPC","CO-OP","COMPANY","RF","CO"];
+const GEN=["GROUP","HOLDINGS","SHOP","ENTERPRISE","ENTERPRISES","TRADING","PROJECTS","SOLUTIONS","SERVICES","INVESTMENTS","CONSULTING","AND","THE","SA","AFRICA","TECHNOLOGIES","DIGITAL"];
+const RESTR=["BANK","INSURANCE","NATIONAL","GOVERNMENT","REPUBLIC","FEDERAL"];
+function checkName(){
+  const raw=document.getElementById("nameIn").value.toUpperCase().replace(/[()]/g," ").replace(/\s+/g," ").trim();
+  const out=[];
+  if(!raw){document.getElementById("nameOut").innerHTML=`<div class="v-meh">Type a name to check it.</div>`;return}
+  const words=raw.split(" ");
+  const ent=ENT.filter(e=>(" "+raw+" ").includes(" "+e+" "));
+  if(ent.length)out.push(["v-bad",`Remove "${ent[0]}". Entity types aren't allowed at reservation; CIPC adds "(Pty) Ltd" when you register.`]);
+  const rest=RESTR.filter(r=>words.includes(r));
+  if(rest.length)out.push(["v-bad",`"${rest[0]}" is a restricted word and needs special permission.`]);
+  const core=words.filter(w=>!ENT.includes(w)&&!GEN.includes(w));
+  if(!core.length)out.push(["v-bad","Only generic words left. CIPC needs a distinctive word."]);
+  else if(core.length===1&&core[0]==="MUNONDE")out.push(["v-bad","\"Munonde\" alone clashes with Munonde Holdings, Shop, Enterprise and Security Group. Add a distinctive word, like Thesoro."]);
+  else if(core.some(w=>["TESORO","PATSERO","INNOVEX","AURORA"].includes(w)))out.push(["v-meh","A similar name is already registered. Expect a 'confusingly similar' flag."]);
+  if(!/^[A-Z0-9 &'\-]+$/.test(raw))out.push(["v-meh","Stick to letters, numbers and spaces."]);
+  if(!out.some(o=>o[0]==="v-bad"))out.push(["v-ok",`Looks lodgeable: "${core.join(" ")}" is your distinctive element. CIPC still makes the final call, so lodge 4 names.`]);
+  document.getElementById("nameOut").innerHTML=out.map(o=>`<div class="${o[0]}">${o[1]}</div>`).join("");
+}
+document.getElementById("nameIn").addEventListener("input",checkName);
+
+/* Bank calculator */
+const BANKS=[["Standard Bank",15,6.10,4],["Capitec",50,2,3],["ABSA Lite",50,5.5,5.5]];
+function banks(){
+  const p=+document.getElementById("pay").value,d=+document.getElementById("deb").value;
+  document.getElementById("payV").textContent=p+(p===1?" payment":" payments");
+  document.getElementById("debV").textContent=d+(d===1?" debit order":" debit orders");
+  const costs=BANKS.map(b=>[b[0],b[1]+b[2]*p+b[3]*d]);
+  const max=Math.max(...costs.map(c=>c[1])),min=Math.min(...costs.map(c=>c[1]));
+  document.getElementById("banks").innerHTML=costs.map(c=>`<div class="bank${c[1]===min?" win":""}"><b>${c[0]}</b><span class="track"><i style="width:${(c[1]/max*100).toFixed(0)}%"></i></span><span>R${c[1].toFixed(0)}</span></div>`).join("");
+}
+["pay","deb"].forEach(id=>document.getElementById(id).addEventListener("input",banks));
+
+/* Quiz */
+const Q=[
+ {q:"How should you type the name in a name reservation?",o:["MUNONDE THESORO GROUP PTY LTD","MUNONDE THESORO GROUP","Munonde Thesoro Group (Pty) Ltd"],a:1,e:"No entity type at reservation. CIPC adds (Pty) Ltd when you register."},
+ {q:"How many names can one R50 reservation hold?",o:["1","2","Up to 4"],a:2,e:"Always use all 4 slots, in order of preference."},
+ {q:"Which financial year end lines up with SARS?",o:["December","February","June"],a:1,e:"The SARS tax year runs March to February."},
+ {q:"A sole black female owner of a start-up gets which B-BBEE level?",o:["Level 1","Level 2","Level 4"],a:0,e:"100% black-owned EME = Level 1, and the certificate is free."},
+ {q:"When is the CIPC annual return due?",o:["Every February","In the registration month, every year","Only when you have turnover"],a:1,e:"It's due every year in the month you registered, even with no income."}
+];
+let qi=0,score=0,answered=false;
+function quiz(){
+  const box=document.getElementById("quiz");
+  if(qi>=Q.length){box.innerHTML=`<p><b>${score} / ${Q.length}</b> ${score===Q.length?"Perfect. You could register the next one alone.":"Not bad. Open the tips on the trail and try again."}</p><button class="btn" id="qr">Try again</button>`;document.getElementById("qr").onclick=()=>{qi=0;score=0;quiz()};return}
+  const c=Q[qi];answered=false;
+  box.innerHTML=`<q>${c.q}</q><div class="opts">${c.o.map((o,i)=>`<button data-i="${i}">${o}</button>`).join("")}</div><div class="qfoot"><span id="qe">Question ${qi+1} of ${Q.length}</span><button class="btn" id="qn" hidden>Next</button></div>`;
+  box.querySelectorAll(".opts button").forEach(b=>b.onclick=()=>{
+    if(answered)return;answered=true;const i=+b.dataset.i;
+    box.querySelectorAll(".opts button")[c.a].classList.add("right");
+    if(i===c.a)score++;else b.classList.add("wrong");
+    document.getElementById("qe").textContent=c.e;document.getElementById("qn").hidden=false;
+  });
+  document.getElementById("qn").onclick=()=>{qi++;quiz()};
+}
+render();checkName();banks();quiz();
+</script>
